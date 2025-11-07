@@ -17,6 +17,14 @@ GLvoid Reshape(int w, int h);
 
 Mesh gCube;
 
+GLvoid Keyboard(unsigned char key, int x, int y)
+{
+	switch (key)
+	{
+	case 'q': exit(0); break;
+	}
+}
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
@@ -44,6 +52,7 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
+	glutKeyboardFunc(Keyboard);
 	glutMainLoop();
 
 	return 0;
@@ -88,6 +97,12 @@ GLvoid drawScene()
 	glm::mat4 test = glm::mat4(1.0f);
 	test = glm::translate(test, glm::vec3(0.0f, 0.0f, -3.0f));
 	DrawCube(gCube, shaderProgramID, test, glm::vec3(0.0f, 0.8f, 0.8f));
+
+	glm::mat4 ground = glm::mat4(1.0f);
+	ground = glm::translate(ground, glm::vec3(0.0f, -0.5f, 0.0f));
+	ground = glm::rotate(ground, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
+	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
 
 	glutSwapBuffers();
 }
