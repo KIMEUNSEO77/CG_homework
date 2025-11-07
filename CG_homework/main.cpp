@@ -33,6 +33,7 @@ struct Cube
 	float height;
 	float currentY;  // 현재 y 위치
 	bool goingUp;    // 위로 가는 중인지
+	float moveingSpeed;  // 움직이는 속도
 };
 std::vector<std::vector<Cube>> cubes;
 
@@ -80,6 +81,7 @@ void InputCubeCount()
 			cubes[i][j].height = randomFloat(9.0f, 17.0f);
 			cubes[i][j].currentY = -10.0f;
 			cubes[i][j].goingUp = rand() % 2;           // 방향 랜덤
+			cubes[i][j].moveingSpeed = randomFloat(0.01f, 0.3f); // 속도 랜덤
 		}
 	}
 }
@@ -124,13 +126,13 @@ void Timer(int value)
 			{
 				if (cubes[i][j].goingUp)
 				{
-					cubes[i][j].currentY += 0.05f;
+					cubes[i][j].currentY += cubes[i][j].moveingSpeed;
 					if (cubes[i][j].currentY >= -1.5f)
 						cubes[i][j].goingUp = false;
 				}
 				else
 				{
-					cubes[i][j].currentY -= 0.05f;
+					cubes[i][j].currentY -= cubes[i][j].moveingSpeed;
 					if (cubes[i][j].currentY <= -5.0f)
 						cubes[i][j].goingUp = true;
 				}
