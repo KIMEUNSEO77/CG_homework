@@ -9,6 +9,7 @@
 #include "shaderMaker.h"
 #include "obj_load.h"
 #include <random>
+#include <vector>
 
 void make_vertexShaders();
 void make_fragmentShaders();
@@ -19,6 +20,18 @@ GLvoid Reshape(int w, int h);
 Mesh gCube;
 int cubeCount_x = 0;    // 가로 개수
 int cubeCount_z = 0;    // 세로 개수
+
+bool animationActive = true;
+float currentY = -10.0f;
+
+struct Cube
+{
+	glm::vec3 position;
+	glm::vec3 color;
+	float height;
+};
+std::vector<std::vector<Cube>> cubes;
+
 
 float randomFloat(float a, float b)
 {
@@ -47,6 +60,22 @@ void InputCubeCount()
 		std::cerr << "세로 개수 잘못 입력" << std::endl;
 		InputCubeCount();
 	}
+
+	cubes.resize(cubeCount_x);
+	for (int i = 0; i < cubeCount_x; ++i) 
+		cubes[i].resize(cubeCount_z);
+	
+	// 큐브들 정보 초기화
+	for (int i = 0; i < cubeCount_x; ++i)
+	{
+		for (int j = 0; j < cubeCount_z; ++j)
+		{
+			cubes[i][j].position = glm::vec3(-2.0f + i, -5.0f, -3.0f + j);
+			cubes[i][j].color = glm::vec3(randomFloat(0.1f, 1.0f),
+				randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
+			cubes[i][j].height = randomFloat(9.0f, 14.0f);
+		}
+	}
 }
 
 // 콘솔창에 명령어들 출력
@@ -54,6 +83,21 @@ void PrintInstructions()
 {
 	std::cout << "<<키보드 명령어들>>\n";
 	std::cout << "q: 종료\n";
+}
+
+void Timer(int value)
+{
+	if (animationActive)
+	{
+		currentY += 0.1f;
+		if (currentY >= -3.0f)
+		{
+			currentY = -3.0f;
+			animationActive = false;
+		}
+		glutPostRedisplay();
+		glutTimerFunc(16, Timer, 0); // 약 60 FPS
+	}
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y)
@@ -95,6 +139,7 @@ int main(int argc, char** argv)
 	PrintInstructions();  // 콘솔창에 명령어들 출력
 
 	glutKeyboardFunc(Keyboard);
+	glutTimerFunc(0, Timer, 0); // 타이머 시작
 	glutMainLoop();
 
 	return 0;
@@ -139,33 +184,23 @@ GLvoid drawScene()
 	pTransform = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 
-	glm::mat4 test = glm::mat4(1.0f);
-	test = glm::translate(test, glm::vec3(0.0f, 0.0f, -3.0f));
-	DrawCube(gCube, shaderProgramID, test, glm::vec3(0.0f, 0.8f, 0.8f));
-
-	
 	glm::mat4 ground = glm::mat4(1.0f);
 	ground = glm::translate(ground, glm::vec3(0.0f, -0.5f, 0.0f));
 	ground = glm::rotate(ground, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
-	
-	glm::vec3 position;
-	glm::vec3 color;
 
 	for (int i = 0; i < cubeCount_x; ++i)
 	{
 		for (int j = 0; j < cubeCount_z; j++)
-		{		
-		    position = glm::vec3(-2.0f + i, -5.0f, -3.0f + j);
-		    color = glm::vec3(randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
-		    
-		    glm::mat4 model = glm::mat4(1.0f);
-		    model = glm::translate(model, position);
-		    model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		    model = glm::scale(model, glm::vec3(1.0f, randomFloat(9.0f, 14.0f), 1.0f));
-		    DrawCube(gCube, shaderProgramID, model, color);
-	    }
+		{
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
+				currentY, cubes[i][j].position.z));
+			model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::scale(model, glm::vec3(1.0f, cubes[i][j].height, 1.0f));
+			DrawCube(gCube, shaderProgramID, model, cubes[i][j].color);
+		}
 	}
 
 	glutSwapBuffers();
