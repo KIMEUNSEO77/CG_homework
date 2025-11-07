@@ -25,6 +25,9 @@ bool animationActive = true; float currentY = -3.0f;
 bool orthoMode = false;  // 직각 투영 모드
 float moveZ = 0.0f;      // z축 이동
 bool updownAnimation = false;   // 위아래 애니메이션
+bool rotatingYPlus = false;    // Y축 중심 양의 방향 회전
+bool rotatingYMinus = false;  // y축 중심 음의 방향 회전
+float angleCameraY = 0.0f; // 카메라 Y축 회전 각도
 
 struct Cube
 {
@@ -156,6 +159,10 @@ void Timer(int value)
 			}
 		}
 	}
+
+	if (rotatingYPlus) angleCameraY += 0.2f;
+	if (rotatingYMinus) angleCameraY -= 0.2f;
+
 	glutPostRedisplay();
 	glutTimerFunc(16, Timer, 0); // 약 60 FPS
 }
@@ -172,6 +179,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'M': updownAnimation = false; break;
 	case '+': SpeedChange(0.01f); break;
 	case '-': SpeedChange(-0.01f); break;
+	case 'y': rotatingYPlus = !rotatingYPlus; rotatingYMinus = false; break;
+	case 'Y': rotatingYMinus = !rotatingYMinus; rotatingYPlus = false; break;
 	case 'q': exit(0); break;
 	}
 }
@@ -244,6 +253,12 @@ GLvoid drawScene()
 	glm::vec3 cameraDirection = glm::vec3(centerX, 0.0f, centerZ);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
+	// 카메라 y축 회전
+	glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angleCameraY), glm::vec3(0.0f, 1.0f, 0.0f))
+			* glm::rotate(glm::mat4(1.0f), glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	
+	cameraPos = glm::vec3(rotation * glm::vec4(cameraPos - cameraDirection, 1.0f)) + cameraDirection;
+
 	glm::mat4 vTransform = glm::mat4(1.0f);
 	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
@@ -275,19 +290,15 @@ GLvoid drawScene()
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
 
-	//float offsetY = moveZ * sin(glm::radians(-15.0f));
-
 	// 큐브들
 	for (int i = 0; i < cubeCount_x; ++i)
 	{
 		for (int j = 0; j < cubeCount_z; j++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
-			//model = glm::translate(model, glm::vec3(0.0f, offsetY, 0.0f));
 			model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
 				cubes[i][j].currentY, cubes[i][j].position.z + moveZ));
-			//model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(1.0f, cubes[i][j].height, 1.0f));
 			DrawCube(gCube, shaderProgramID, model, cubes[i][j].color);
 		}
