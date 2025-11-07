@@ -16,6 +16,21 @@ GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 
 Mesh gCube;
+int cubeCount = 0;
+
+// 사용자에게 정육면체의 개수 입력 받기
+void InputCubeCount()
+{
+	std::cout << "5~25 입력: ";
+	std::cin >> cubeCount;
+	std::cout << "입력된 정육면체 개수: " << cubeCount << std::endl;
+	
+	if (cubeCount < 5 || cubeCount > 25)
+	{
+		std::cerr << "잘못된 입력" << std::endl;
+		InputCubeCount();
+	}
+}
 
 GLvoid Keyboard(unsigned char key, int x, int y)
 {
@@ -41,6 +56,7 @@ int main(int argc, char** argv)
 
 	glEnable(GL_DEPTH_TEST); // 깊이 테스트 활성화
 	// 은면 제거 생략 일단은
+	InputCubeCount();
 
 	make_vertexShaders();
 	make_fragmentShaders();
@@ -98,11 +114,23 @@ GLvoid drawScene()
 	test = glm::translate(test, glm::vec3(0.0f, 0.0f, -3.0f));
 	DrawCube(gCube, shaderProgramID, test, glm::vec3(0.0f, 0.8f, 0.8f));
 
+	
 	glm::mat4 ground = glm::mat4(1.0f);
 	ground = glm::translate(ground, glm::vec3(0.0f, -0.5f, 0.0f));
 	ground = glm::rotate(ground, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
+	
+	for (int i = 0; i < cubeCount; ++i)
+	{
+		glm::vec3 position = glm::vec3(-2.0f + i, 1.5f, -3.0f);
+		glm::vec3 color = glm::vec3(1.0f, 0.0f, 1.0f);
+
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, position);
+		model = glm::scale(model, glm::vec3(0.5f, 1.0f, 0.5f));
+		DrawCube(gCube, shaderProgramID, model, color);
+	}
 
 	glutSwapBuffers();
 }
