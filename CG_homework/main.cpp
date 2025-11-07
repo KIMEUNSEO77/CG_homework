@@ -21,7 +21,7 @@ Mesh gCube;
 int cubeCount_x = 0;    // 가로 개수
 int cubeCount_z = 0;    // 세로 개수
 
-bool animationActive = true; float currentY = -10.0f;
+bool animationActive = true; float currentY = -3.0f;
 bool orthoMode = false;  // 직각 투영 모드
 float moveZ = 0.0f;      // z축 이동
 bool updownAnimation = false;   // 위아래 애니메이션
@@ -31,6 +31,8 @@ struct Cube
 	glm::vec3 position;
 	glm::vec3 color;
 	float height;
+	float currentY;  // 현재 y 위치
+	bool goingUp;    // 위로 가는 중인지
 };
 std::vector<std::vector<Cube>> cubes;
 
@@ -72,10 +74,12 @@ void InputCubeCount()
 	{
 		for (int j = 0; j < cubeCount_z; ++j)
 		{
-			cubes[i][j].position = glm::vec3(-2.0f + i, -5.0f, -3.0f + j);
+			cubes[i][j].position = glm::vec3(-2.0f + i, 0.0f, -3.0f + j);
 			cubes[i][j].color = glm::vec3(randomFloat(0.1f, 1.0f),
 				randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
-			cubes[i][j].height = randomFloat(9.0f, 14.0f);
+			cubes[i][j].height = randomFloat(9.0f, 17.0f);
+			cubes[i][j].currentY = -10.0f;
+			cubes[i][j].goingUp = rand() % 2;           // 방향 랜덤
 		}
 	}
 }
@@ -97,28 +101,40 @@ void Timer(int value)
 {
 	if (animationActive)
 	{
-		currentY += 0.1f;
-		if (currentY >= -3.0f)
+		for (int i = 0; i < cubeCount_x; ++i)
 		{
-			currentY = -3.0f;
-			animationActive = false;
+			for (int j = 0; j < cubeCount_z; ++j)
+			{
+				cubes[i][j].currentY += 0.1f;
+
+				if (cubes[i][j].currentY >= -3.0f)
+				{
+					cubes[i][j].currentY = -3.0f;
+					animationActive = false;
+				}					
+			}
 		}
 	}
 
 	if (updownAnimation)
 	{
-		static bool goingUp = true;
-		if (goingUp)
+		for (int i = 0; i < cubeCount_x; ++i)
 		{
-			currentY += 0.05f;
-			if (currentY >= -1.5f)
-				goingUp = false;
-		}
-		else
-		{
-			currentY -= 0.05f;
-			if (currentY <= -7.0f)
-				goingUp = true;
+			for (int j = 0; j < cubeCount_z; ++j)
+			{
+				if (cubes[i][j].goingUp)
+				{
+					cubes[i][j].currentY += 0.05f;
+					if (cubes[i][j].currentY >= -1.5f)
+						cubes[i][j].goingUp = false;
+				}
+				else
+				{
+					cubes[i][j].currentY -= 0.05f;
+					if (cubes[i][j].currentY <= -5.0f)
+						cubes[i][j].goingUp = true;
+				}
+			}
 		}
 	}
 	glutPostRedisplay();
@@ -238,7 +254,7 @@ GLvoid drawScene()
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
 
-	float offsetY = moveZ * sin(glm::radians(-15.0f));
+	//float offsetY = moveZ * sin(glm::radians(-15.0f));
 
 	// 큐브들
 	for (int i = 0; i < cubeCount_x; ++i)
@@ -246,10 +262,11 @@ GLvoid drawScene()
 		for (int j = 0; j < cubeCount_z; j++)
 		{
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(0.0f, offsetY, 0.0f));
-			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
-				currentY, cubes[i][j].position.z + moveZ));
+			//model = glm::translate(model, glm::vec3(0.0f, offsetY, 0.0f));
 			model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
+				cubes[i][j].currentY, cubes[i][j].position.z + moveZ));
+			//model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::scale(model, glm::vec3(1.0f, cubes[i][j].height, 1.0f));
 			DrawCube(gCube, shaderProgramID, model, cubes[i][j].color);
 		}
