@@ -21,8 +21,8 @@ Mesh gCube;
 int cubeCount_x = 0;    // 가로 개수
 int cubeCount_z = 0;    // 세로 개수
 
-bool animationActive = true;
-float currentY = -10.0f;
+bool animationActive = true; float currentY = -10.0f;
+bool orthoMode = false;  // 직각 투영 모드
 
 struct Cube
 {
@@ -104,6 +104,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
+	case 'o': orthoMode = true; glutPostRedisplay(); break;
+	case 'p': orthoMode = false; glutPostRedisplay(); break;
 	case 'q': exit(0); break;
 	}
 }
@@ -181,15 +183,21 @@ GLvoid drawScene()
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
 
 	glm::mat4 pTransform = glm::mat4(1.0f);
-	pTransform = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+	if (orthoMode)
+		pTransform = glm::ortho(-centerX, centerX, -3.0f, 3.0f, 0.1f, 100.0f);
+	else
+		pTransform = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
+
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pTransform[0][0]);
 
+	// 바닥
 	glm::mat4 ground = glm::mat4(1.0f);
 	ground = glm::translate(ground, glm::vec3(0.0f, -0.5f, 0.0f));
 	ground = glm::rotate(ground, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
 
+	// 큐브들
 	for (int i = 0; i < cubeCount_x; ++i)
 	{
 		for (int j = 0; j < cubeCount_z; j++)
