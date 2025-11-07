@@ -8,6 +8,7 @@
 #include "filetobuf.h"
 #include "shaderMaker.h"
 #include "obj_load.h"
+#include <random>
 
 void make_vertexShaders();
 void make_fragmentShaders();
@@ -17,6 +18,15 @@ GLvoid Reshape(int w, int h);
 
 Mesh gCube;
 int cubeCount = 0;
+
+float randomFloat(float a, float b)
+{
+	std::random_device rd;
+	std::mt19937 gen(rd());  // Mersenne Twister 엔진
+	std::uniform_real_distribution<float> dist(a, b);
+
+	return dist(gen);
+}
 
 // 사용자에게 정육면체의 개수 입력 받기
 void InputCubeCount()
@@ -30,6 +40,13 @@ void InputCubeCount()
 		std::cerr << "잘못된 입력" << std::endl;
 		InputCubeCount();
 	}
+}
+
+// 콘솔창에 명령어들 출력
+void PrintInstructions()
+{
+	std::cout << "<<키보드 명령어들>>\n";
+	std::cout << "q: 종료\n";
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y)
@@ -56,7 +73,7 @@ int main(int argc, char** argv)
 
 	glEnable(GL_DEPTH_TEST); // 깊이 테스트 활성화
 	// 은면 제거 생략 일단은
-	InputCubeCount();
+	InputCubeCount();   // 큐브 개수 입력 받기
 
 	make_vertexShaders();
 	make_fragmentShaders();
@@ -67,6 +84,8 @@ int main(int argc, char** argv)
 		std::cerr << "Failed to load unit_cube.obj\n";
 		return 1;
 	}
+
+	PrintInstructions();  // 콘솔창에 명령어들 출력
 
 	glutKeyboardFunc(Keyboard);
 	glutMainLoop();
@@ -121,14 +140,18 @@ GLvoid drawScene()
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
 	
+	glm::vec3 position;
+	glm::vec3 color;
+
 	for (int i = 0; i < cubeCount; ++i)
 	{
-		glm::vec3 position = glm::vec3(-2.0f + i, 1.5f, -3.0f);
-		glm::vec3 color = glm::vec3(1.0f, 0.0f, 1.0f);
+		position = glm::vec3(-2.0f + i, -0.5f, -3.0f);
+		color = glm::vec3(randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, position);
-		model = glm::scale(model, glm::vec3(0.5f, 1.0f, 0.5f));
+		model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.0f, randomFloat(4.0f, 10.0f), 1.0f));
 		DrawCube(gCube, shaderProgramID, model, color);
 	}
 
