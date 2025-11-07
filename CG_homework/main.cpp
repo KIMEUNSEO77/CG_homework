@@ -17,7 +17,8 @@ GLvoid drawScene();
 GLvoid Reshape(int w, int h);
 
 Mesh gCube;
-int cubeCount = 0;
+int cubeCount_x = 0;    // 가로 개수
+int cubeCount_z = 0;    // 세로 개수
 
 float randomFloat(float a, float b)
 {
@@ -31,13 +32,19 @@ float randomFloat(float a, float b)
 // 사용자에게 정육면체의 개수 입력 받기
 void InputCubeCount()
 {
-	std::cout << "5~25 입력: ";
-	std::cin >> cubeCount;
-	std::cout << "입력된 정육면체 개수: " << cubeCount << std::endl;
+	std::cout << "가로, 세로 개수 5~25 입력: ";
+	std::cin >> cubeCount_x >> cubeCount_z;
+	std::cout << "가로 개수: " << cubeCount_x << ", 세로 개수: " << cubeCount_z << std::endl;
 	
-	if (cubeCount < 5 || cubeCount > 25)
+	if (cubeCount_x < 5 || cubeCount_x > 25)
 	{
-		std::cerr << "잘못된 입력" << std::endl;
+		std::cerr << "가로 개수 잘못 입력" << std::endl;
+		InputCubeCount();
+	}
+
+	if (cubeCount_z < 5 || cubeCount_z > 25)
+	{
+		std::cerr << "세로 개수 잘못 입력" << std::endl;
 		InputCubeCount();
 	}
 }
@@ -117,7 +124,7 @@ GLvoid drawScene()
 	GLint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLint projLoc = glGetUniformLocation(shaderProgramID, "projection");
 
-	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 8.0f);
+	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 15.0f);
 	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -143,16 +150,19 @@ GLvoid drawScene()
 	glm::vec3 position;
 	glm::vec3 color;
 
-	for (int i = 0; i < cubeCount; ++i)
+	for (int i = 0; i < cubeCount_x; ++i)
 	{
-		position = glm::vec3(-2.0f + i, -0.5f, -3.0f);
-		color = glm::vec3(randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
-
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, position);
-		model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.0f, randomFloat(4.0f, 10.0f), 1.0f));
-		DrawCube(gCube, shaderProgramID, model, color);
+		for (int j = 0; j < cubeCount_z; ++j)
+		{		
+		    position = glm::vec3(-2.0f + i, -0.5f, -3.0f + j);
+		    color = glm::vec3(randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
+		    
+		    glm::mat4 model = glm::mat4(1.0f);
+		    model = glm::translate(model, position);
+		    model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		    model = glm::scale(model, glm::vec3(1.0f, randomFloat(4.0f, 10.0f), 1.0f));
+		    DrawCube(gCube, shaderProgramID, model, color);
+	    }
 	}
 
 	glutSwapBuffers();
