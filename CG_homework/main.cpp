@@ -124,8 +124,11 @@ GLvoid drawScene()
 	GLint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLint projLoc = glGetUniformLocation(shaderProgramID, "projection");
 
-	glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 15.0f);
-	glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f);
+	float centerX = (cubeCount_x - 1) / 2.0f;
+	float centerZ = (cubeCount_z - 1) / 2.0f;
+
+	glm::vec3 cameraPos = glm::vec3(centerX, 0.0f, 15.0f + cubeCount_z);
+	glm::vec3 cameraDirection = glm::vec3(centerX, 0.0f, centerZ);
 	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	glm::mat4 vTransform = glm::mat4(1.0f);
@@ -152,15 +155,15 @@ GLvoid drawScene()
 
 	for (int i = 0; i < cubeCount_x; ++i)
 	{
-		for (int j = 0; j < cubeCount_z; ++j)
+		for (int j = 0; j < cubeCount_z; j++)
 		{		
-		    position = glm::vec3(-2.0f + i, -0.5f, -3.0f + j);
+		    position = glm::vec3(-2.0f + i, -5.0f, -3.0f + j);
 		    color = glm::vec3(randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
 		    
 		    glm::mat4 model = glm::mat4(1.0f);
 		    model = glm::translate(model, position);
 		    model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-		    model = glm::scale(model, glm::vec3(1.0f, randomFloat(4.0f, 10.0f), 1.0f));
+		    model = glm::scale(model, glm::vec3(1.0f, randomFloat(9.0f, 14.0f), 1.0f));
 		    DrawCube(gCube, shaderProgramID, model, color);
 	    }
 	}
