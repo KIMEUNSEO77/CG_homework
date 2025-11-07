@@ -82,6 +82,8 @@ void InputCubeCount()
 void PrintInstructions()
 {
 	std::cout << "<<키보드 명령어들>>\n";
+	std::cout << "o: 직각 투영 모드\n";
+	std::cout << "p: 원근 투영 모드\n";
 	std::cout << "q: 종료\n";
 }
 
@@ -184,7 +186,19 @@ GLvoid drawScene()
 
 	glm::mat4 pTransform = glm::mat4(1.0f);
 	if (orthoMode)
-		pTransform = glm::ortho(-centerX, centerX, -3.0f, 3.0f, 0.1f, 100.0f);
+	{
+		float aspect = (float)width / (float)height;
+		float margin = 1.0f;
+		float maxH = 14.0f;
+		float halfContentX = 0.5f * cubeCount_x + margin;
+		float halfContentY = 0.5f * maxH + margin;
+
+		// 더 큰 쪽에 맞춰 확장
+		float halfY = std::max(halfContentY, halfContentX / aspect);
+		float halfX = halfY * aspect;
+
+		pTransform = glm::ortho(-halfX, halfX, -halfY, halfY, 0.1f, 1000.0f);
+	}
 	else
 		pTransform = glm::perspective(glm::radians(45.0f), (float)width / (float)height, 0.1f, 100.0f);
 
