@@ -86,6 +86,21 @@ void InputCubeCount()
 	}
 }
 
+void SpeedChange(float delta)
+{
+	for (int i = 0; i < cubeCount_x; ++i)
+	{
+		for (int j = 0; j < cubeCount_z; ++j)
+		{
+			cubes[i][j].moveingSpeed += delta;
+			if (cubes[i][j].moveingSpeed <= 0.002f)
+				cubes[i][j].moveingSpeed = 0.002f;
+			if (cubes[i][j].moveingSpeed >= 0.5f)
+				cubes[i][j].moveingSpeed = 0.5f;
+		}
+	}
+}
+
 // 콘솔창에 명령어들 출력
 void PrintInstructions()
 {
@@ -96,6 +111,8 @@ void PrintInstructions()
 	std::cout << "Z: z축 음의 방향 이동\n";
 	std::cout << "m: 큐브들이 위아래로 움직임 시작\n";
 	std::cout << "M: 큐브들이 위아래로 움직임 정지\n";
+	std::cout << "+: 큐브 움직임 속도 증가\n";
+	std::cout << "-: 큐브 움직임 속도 감소\n";
 	std::cout << "q: 종료\n";
 }
 
@@ -153,6 +170,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'Z': if (!orthoMode) moveZ -= 1.0f; glutPostRedisplay(); break;
 	case 'm': updownAnimation = true; break;
 	case 'M': updownAnimation = false; break;
+	case '+': SpeedChange(0.01f); break;
+	case '-': SpeedChange(-0.01f); break;
 	case 'q': exit(0); break;
 	}
 }
