@@ -11,6 +11,10 @@
 #include <random>
 #include <vector>
 
+#include <algorithm>
+#include <stack>
+#include <utility>
+
 void make_vertexShaders();
 void make_fragmentShaders();
 GLuint make_shaderProgram();
@@ -40,9 +44,86 @@ struct Cube
 	float currentY;  // 현재 y 위치
 	bool goingUp;    // 위로 가는 중인지
 	float moveingSpeed;  // 움직이는 속도
+
+	bool active = true; // 미로 모드에서 그릴지 말지 (그리면 벽)
 };
 std::vector<std::vector<Cube>> cubes;
 
+static std::mt19937 rng(std::random_device{}());
+
+void GenerateMaze()
+{
+	// 미로는 홀수 크기가 깔끔하니, 짝수면 하나 줄여서 맞춤
+	if (cubeCount_x % 2 == 0) cubeCount_x -= 1;
+	if (cubeCount_z % 2 == 0) cubeCount_z -= 1;
+
+	// 모든 칸을 '벽(=active=true)'으로 초기화
+	for (int i = 0; i < cubeCount_x; ++i)
+		for (int j = 0; j < cubeCount_z; ++j)
+			cubes[i][j].active = true;
+
+	// 방문표시
+	std::vector<std::vector<bool>> vis(cubeCount_x, std::vector<bool>(cubeCount_z, false));
+
+	auto in = [&](int x, int z) {
+		return (x > 0 && x < cubeCount_x - 1 && z > 0 && z < cubeCount_z - 1);
+		};
+
+	// 시작 셀(홀수,홀수) 선택
+	int sx = 1, sz = 1;  // 고정해도 되고 랜덤해도 됨
+	vis[sx][sz] = true;
+	cubes[sx][sz].active = false; // 길
+
+	std::stack<std::pair<int, int>> st;
+	st.push({ sx, sz });
+
+	// 이웃 방향(2칸씩 이동): 좌우상하
+	const int dx[4] = { +2, -2, 0, 0 };
+	const int dz[4] = { 0, 0, +2, -2 };
+
+	while (!st.empty())
+	{
+		auto cur = st.top();
+		int x = cur.first;
+		int z = cur.second;
+
+		// 방문하지 않은 이웃(2칸 떨어진 홀수칸) 수집
+		std::vector<int> cand;
+		for (int k = 0; k < 4; ++k)
+		{
+			int nx = x + dx[k];
+			int nz = z + dz[k];
+			if (in(nx, nz) && !vis[nx][nz] && (nx % 2 == 1) && (nz % 2 == 1))
+				cand.push_back(k);
+		}
+
+		if (cand.empty())
+		{
+			st.pop();
+			continue;
+		}
+
+		// 랜덤 이웃 하나 선택
+		std::shuffle(cand.begin(), cand.end(), rng);
+		int k = cand.front();
+		int nx = x + dx[k];
+		int nz = z + dz[k];
+
+		// 현재(x,z)와 (nx,nz) 사이의 벽(1칸 차이)을 뚫음
+		int wx = x + dx[k] / 2;
+		int wz = z + dz[k] / 2;
+
+		vis[nx][nz] = true;
+		cubes[nx][nz].active = false; // 길
+		cubes[wx][wz].active = false; // 벽 제거(길)
+
+		st.push({ nx, nz });
+	}
+
+	// 입구/출구(테두리 구멍) 만들어 주기(원하면)
+	cubes[1][0].active = false;                           // 입구
+	cubes[cubeCount_x - 2][cubeCount_z - 1].active = false;   // 출구
+}
 
 float randomFloat(float a, float b)
 {
@@ -121,7 +202,7 @@ void PrintInstructions()
 	std::cout << "Y: 카메라 Y축 중심 음의 방향 회전 시작/정지\n";
 	std::cout << "+: 큐브 움직임 속도 증가\n";
 	std::cout << "-: 큐브 움직임 속도 감소\n";
-	std::cout << "r: 미로 제작\n";
+	std::cout << "r: 미로 제작(누를 때마다 새로운 미로가 제작됨)\n";
 	std::cout << "q: 종료\n";
 }
 
@@ -133,6 +214,8 @@ void Timer(int value)
 		{
 			for (int j = 0; j < cubeCount_z; ++j)
 			{
+				if (!cubes[i][j].active) continue;  // 애니메이션 x
+
 				cubes[i][j].currentY += 0.1f;
 
 				if (cubes[i][j].currentY >= -3.0f)
@@ -150,6 +233,8 @@ void Timer(int value)
 		{
 			for (int j = 0; j < cubeCount_z; ++j)
 			{
+				if (!cubes[i][j].active) continue;  // 애니메이션 x
+
 				if (cubes[i][j].goingUp)
 				{
 					cubes[i][j].currentY += cubes[i][j].moveingSpeed;
@@ -187,7 +272,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case '-': SpeedChange(-0.01f); break;
 	case 'y': rotatingYPlus = !rotatingYPlus; rotatingYMinus = false; break;
 	case 'Y': rotatingYMinus = !rotatingYMinus; rotatingYPlus = false; break;
-	case 'r': mazeMode = true; glutPostRedisplay(); break;
+	case 'r': mazeMode = true; GenerateMaze(); glutPostRedisplay(); break;
 	case 'q': exit(0); break;
 	}
 }
@@ -302,6 +387,8 @@ GLvoid drawScene()
 	{
 		for (int j = 0; j < cubeCount_z; j++)
 		{
+			if (!cubes[i][j].active) continue;  // 길은 그리지 않음
+
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
