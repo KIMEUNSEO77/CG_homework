@@ -29,6 +29,9 @@ bool rotatingYPlus = false;    // Y축 중심 양의 방향 회전
 bool rotatingYMinus = false;  // y축 중심 음의 방향 회전
 float angleCameraY = 0.0f; // 카메라 Y축 회전 각도
 
+// 미로
+bool mazeMode = false;   // 미로 모드
+
 struct Cube
 {
 	glm::vec3 position;
@@ -114,8 +117,11 @@ void PrintInstructions()
 	std::cout << "Z: z축 음의 방향 이동\n";
 	std::cout << "m: 큐브들이 위아래로 움직임 시작\n";
 	std::cout << "M: 큐브들이 위아래로 움직임 정지\n";
+	std::cout << "y: 카메라 Y축 중심 양의 방향 회전 시작/정지\n";
+	std::cout << "Y: 카메라 Y축 중심 음의 방향 회전 시작/정지\n";
 	std::cout << "+: 큐브 움직임 속도 증가\n";
 	std::cout << "-: 큐브 움직임 속도 감소\n";
+	std::cout << "r: 미로 제작\n";
 	std::cout << "q: 종료\n";
 }
 
@@ -181,6 +187,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case '-': SpeedChange(-0.01f); break;
 	case 'y': rotatingYPlus = !rotatingYPlus; rotatingYMinus = false; break;
 	case 'Y': rotatingYMinus = !rotatingYMinus; rotatingYPlus = false; break;
+	case 'r': mazeMode = true; glutPostRedisplay(); break;
 	case 'q': exit(0); break;
 	}
 }
