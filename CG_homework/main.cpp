@@ -11,6 +11,7 @@
 #include <random>
 #include <vector>
 
+// 미로
 #include <algorithm>
 #include <stack>
 #include <utility>
@@ -27,7 +28,7 @@ int cubeCount_z = 0;    // 세로 개수
 
 bool animationActive = true; float currentY = -3.0f;
 bool orthoMode = false;  // 직각 투영 모드
-float moveZ = 0.0f;      // z축 이동
+float moveCubeZ = 0.0f;      // z축 이동
 bool updownAnimation = false;   // 위아래 애니메이션
 bool rotatingYPlus = false;    // Y축 중심 양의 방향 회전
 bool rotatingYMinus = false;  // y축 중심 음의 방향 회전
@@ -35,6 +36,17 @@ float angleCameraY = 0.0f; // 카메라 Y축 회전 각도
 
 // 미로
 bool mazeMode = false;   // 미로 모드
+bool lowMode = false;    // 낮은 벽 모드(낮아지고, 움직임이 멈춰야 함)
+bool playerActive = false; // 플레이어 있는지 없는지
+
+// 로봇
+float moveX = 0.0f; float moveZ = 0.0f; float moveSpeed = 0.05f;
+float angleY = 0.0f;  // 움직일 때 방향 (로봇 전체 방향)
+float angleArm_X = 0.0f;   //  팔 각도
+int dir = 1;
+float angleLeg_X = 0.0f;   //  다리 각도
+
+float limitAngleX = 45.0f; float limitAngleY = 10.0f;
 
 struct Cube
 {
@@ -53,11 +65,11 @@ static std::mt19937 rng(std::random_device{}());
 
 void GenerateMaze()
 {
-	// 미로는 홀수 크기가 깔끔하니, 짝수면 하나 줄여서 맞춤
+	// 짝수면 하나 줄여서 맞춤
 	if (cubeCount_x % 2 == 0) cubeCount_x -= 1;
 	if (cubeCount_z % 2 == 0) cubeCount_z -= 1;
 
-	// 모든 칸을 '벽(=active=true)'으로 초기화
+	// 모든 칸을 초기화
 	for (int i = 0; i < cubeCount_x; ++i)
 		for (int j = 0; j < cubeCount_z; ++j)
 			cubes[i][j].active = true;
@@ -65,7 +77,8 @@ void GenerateMaze()
 	// 방문표시
 	std::vector<std::vector<bool>> vis(cubeCount_x, std::vector<bool>(cubeCount_z, false));
 
-	auto in = [&](int x, int z) {
+	auto in = [&](int x, int z) 
+		{
 		return (x > 0 && x < cubeCount_x - 1 && z > 0 && z < cubeCount_z - 1);
 		};
 
@@ -134,6 +147,28 @@ float randomFloat(float a, float b)
 	return dist(gen);
 }
 
+// 큐브들 정보 초기화
+void InitCube()
+{
+	cubes.resize(cubeCount_x);
+	for (int i = 0; i < cubeCount_x; ++i)
+		cubes[i].resize(cubeCount_z);
+
+	for (int i = 0; i < cubeCount_x; ++i)
+	{
+		for (int j = 0; j < cubeCount_z; ++j)
+		{
+			cubes[i][j].position = glm::vec3(-2.0f + i, 0.0f, -3.0f + j);
+			cubes[i][j].color = glm::vec3(randomFloat(0.1f, 1.0f),
+				randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
+			cubes[i][j].height = randomFloat(9.0f, 17.0f);
+			cubes[i][j].currentY = -10.0f;
+			cubes[i][j].goingUp = rand() % 2;           // 방향 랜덤
+			cubes[i][j].moveingSpeed = randomFloat(0.01f, 0.3f); // 속도 랜덤
+		}
+	}
+}
+
 // 사용자에게 정육면체의 개수 입력 받기
 void InputCubeCount()
 {
@@ -152,25 +187,7 @@ void InputCubeCount()
 		std::cerr << "세로 개수 잘못 입력" << std::endl;
 		InputCubeCount();
 	}
-
-	cubes.resize(cubeCount_x);
-	for (int i = 0; i < cubeCount_x; ++i) 
-		cubes[i].resize(cubeCount_z);
-	
-	// 큐브들 정보 초기화
-	for (int i = 0; i < cubeCount_x; ++i)
-	{
-		for (int j = 0; j < cubeCount_z; ++j)
-		{
-			cubes[i][j].position = glm::vec3(-2.0f + i, 0.0f, -3.0f + j);
-			cubes[i][j].color = glm::vec3(randomFloat(0.1f, 1.0f),
-				randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
-			cubes[i][j].height = randomFloat(9.0f, 17.0f);
-			cubes[i][j].currentY = -10.0f;
-			cubes[i][j].goingUp = rand() % 2;           // 방향 랜덤
-			cubes[i][j].moveingSpeed = randomFloat(0.01f, 0.3f); // 속도 랜덤
-		}
-	}
+	InitCube();
 }
 
 void SpeedChange(float delta)
@@ -184,6 +201,18 @@ void SpeedChange(float delta)
 				cubes[i][j].moveingSpeed = 0.002f;
 			if (cubes[i][j].moveingSpeed >= 0.5f)
 				cubes[i][j].moveingSpeed = 0.5f;
+		}
+	}
+}
+
+void LowMode()
+{
+	for (int i = 0; i < cubeCount_x; ++i)
+	{
+		for (int j = 0; j < cubeCount_z; ++j)
+		{
+			if (!cubes[i][j].active) continue;  // 애니메이션 x
+			cubes[i][j].height = 5.0f;
 		}
 	}
 }
@@ -203,7 +232,53 @@ void PrintInstructions()
 	std::cout << "+: 큐브 움직임 속도 증가\n";
 	std::cout << "-: 큐브 움직임 속도 감소\n";
 	std::cout << "r: 미로 제작(누를 때마다 새로운 미로가 제작됨)\n";
+	std::cout << "v: 낮은 벽 모드 시작, 움직임 시작/정지\n";
 	std::cout << "q: 종료\n";
+}
+
+void MoveArmX()
+{
+	if (angleArm_X > limitAngleX) dir = -1;
+	else if (angleArm_X < -limitAngleX) dir = 1;
+	angleArm_X += dir * 2.0f;
+
+	if (angleLeg_X > limitAngleY) dir = -1;
+	else if (angleLeg_X < -limitAngleY) dir = 1;
+	angleLeg_X += dir * 1.0f;
+}
+
+void MoveX(float speed)
+{
+	moveX += speed;
+	glutPostRedisplay();
+}
+
+void MoveZ(float speed)
+{
+	moveZ += speed;
+	glutPostRedisplay();
+}
+
+void IncreaseSpeed(float delta)
+{
+	moveSpeed += delta;
+	if (moveSpeed < 0.01f) moveSpeed = 0.01f;
+	if (moveSpeed > 0.2f) moveSpeed = 0.2f;
+
+	if (delta > 0)
+	{
+		if (limitAngleX < 60.0f)
+			limitAngleX += 3.0f;
+		if (limitAngleY < 20.0f)
+			limitAngleY += 1.0f;
+	}
+	else
+	{
+		if (limitAngleX > 15.0f)
+			limitAngleX -= 3.0f;
+		if (limitAngleY > 5.0f)
+			limitAngleY -= 1.0f;
+	}
 }
 
 void Timer(int value)
@@ -264,8 +339,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	{
 	case 'o': orthoMode = true; glutPostRedisplay(); break;
 	case 'p': orthoMode = false; glutPostRedisplay(); break;
-	case 'z': if (!orthoMode) moveZ += 1.0f; glutPostRedisplay(); break;
-	case 'Z': if (!orthoMode) moveZ -= 1.0f; glutPostRedisplay(); break;
+	case 'z': if (!orthoMode) moveCubeZ += 1.0f; glutPostRedisplay(); break;
+	case 'Z': if (!orthoMode) moveCubeZ -= 1.0f; glutPostRedisplay(); break;
 	case 'm': updownAnimation = true; break;
 	case 'M': updownAnimation = false; break;
 	case '+': SpeedChange(0.01f); break;
@@ -273,8 +348,22 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'y': rotatingYPlus = !rotatingYPlus; rotatingYMinus = false; break;
 	case 'Y': rotatingYMinus = !rotatingYMinus; rotatingYPlus = false; break;
 	case 'r': mazeMode = true; GenerateMaze(); glutPostRedisplay(); break;
+	case 'v': LowMode(); updownAnimation = !updownAnimation; glutPostRedisplay(); break;
+	case 's': playerActive = true; glutPostRedisplay(); break;
 	case 'q': exit(0); break;
 	}
+}
+
+void SpecialKeyboard(int key, int x, int y)
+{
+	switch (key)
+	{
+	case GLUT_KEY_UP: moveZ -= 0.1f; break;
+	case GLUT_KEY_DOWN: moveZ += 0.1f; break;
+	case GLUT_KEY_LEFT: moveX -= 0.1f; break;
+	case GLUT_KEY_RIGHT: moveX += 0.1f; break;
+	}
+	glutPostRedisplay();
 }
 
 int main(int argc, char** argv)
@@ -309,6 +398,7 @@ int main(int argc, char** argv)
 
 	glutKeyboardFunc(Keyboard);
 	glutTimerFunc(0, Timer, 0); // 타이머 시작
+	glutSpecialFunc(SpecialKeyboard);
 	glutMainLoop();
 
 	return 0;
@@ -392,10 +482,67 @@ GLvoid drawScene()
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
-				cubes[i][j].currentY, cubes[i][j].position.z + moveZ));
+				cubes[i][j].currentY, cubes[i][j].position.z + moveCubeZ));
 			model = glm::scale(model, glm::vec3(1.0f, cubes[i][j].height, 1.0f));
 			DrawCube(gCube, shaderProgramID, model, cubes[i][j].color);
 		}
+	}
+
+	if (playerActive)
+	{
+		// 큐브 그리기
+		// 공통
+		glm::mat4 share = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		share = glm::translate(share, glm::vec3(0.0f, 0.0f, -5.0f));
+
+		// 로봇 그리기
+		glm::mat4 robotBase = share;
+		robotBase = glm::translate(robotBase, glm::vec3(moveX, 5.0f, moveZ));
+		robotBase = glm::rotate(robotBase, glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+		// 머리
+		glm::mat4 robotHead = robotBase;
+		robotHead = glm::translate(robotHead, glm::vec3(0.0f, 0.0f, 0.0f));
+		robotHead = glm::scale(robotHead, glm::vec3(1.0f, 1.0f, 1.0f));
+		DrawCube(gCube, shaderProgramID, robotHead, glm::vec3(1.0f, 0.7f, 0.3f));
+
+		// 코
+		glm::mat4 robotNose = robotBase;
+		robotNose = glm::translate(robotNose, glm::vec3(0.0f, 0.0f, 0.5f));
+		robotNose = glm::scale(robotNose, glm::vec3(0.2f, 0.2f, 0.3f));
+		DrawCube(gCube, shaderProgramID, robotNose, glm::vec3(1.0f, 0.0f, 0.0f));
+
+		// 몸통
+		glm::mat4 robotBody = robotBase;
+		robotBody = glm::translate(robotBody, glm::vec3(0.0f, -1.0f, 0.0f));
+		robotBody = glm::scale(robotBody, glm::vec3(1.0f, 1.5f, 1.0f));
+		DrawCube(gCube, shaderProgramID, robotBody, glm::vec3(0.5f, 0.9f, 0.5f));
+
+		// 왼팔
+		glm::mat4 robotArmL = robotBase;
+		robotArmL = glm::rotate(robotArmL, glm::radians(angleArm_X), glm::vec3(1.0f, 0.0f, 0.0f));
+		robotArmL = glm::translate(robotArmL, glm::vec3(-0.5f, -1.0f, 0.0f));
+		robotArmL = glm::scale(robotArmL, glm::vec3(0.3f, 1.2f, 0.3f));
+		DrawCube(gCube, shaderProgramID, robotArmL, glm::vec3(0.7f, 0.6f, 0.7f));
+		// 오른팔
+		glm::mat4 robotArmR = robotBase;
+		robotArmR = glm::rotate(robotArmR, glm::radians(-angleArm_X), glm::vec3(1.0f, 0.0f, 0.0f));
+		robotArmR = glm::translate(robotArmR, glm::vec3(0.5f, -1.0f, 0.0f));
+		robotArmR = glm::scale(robotArmR, glm::vec3(0.3f, 1.2f, 0.3f));
+		DrawCube(gCube, shaderProgramID, robotArmR, glm::vec3(0.3f, 0.4f, 0.3f));
+
+		// 왼다리
+		glm::mat4 robotLegL = robotBase;
+		robotLegL = glm::rotate(robotLegL, glm::radians(-angleLeg_X), glm::vec3(1.0f, 0.0f, 0.0f));
+		robotLegL = glm::translate(robotLegL, glm::vec3(-0.1f, -2.2f, 0.0f));
+		robotLegL = glm::scale(robotLegL, glm::vec3(0.2f, 2.0f, 0.2f));
+		DrawCube(gCube, shaderProgramID, robotLegL, glm::vec3(0.8f, 0.5f, 0.5f));
+		// 오른다리
+		glm::mat4 robotLegR = robotBase;
+		robotLegR = glm::rotate(robotLegR, glm::radians(angleLeg_X), glm::vec3(1.0f, 0.0f, 0.0f));
+		robotLegR = glm::translate(robotLegR, glm::vec3(0.1f, -2.2f, 0.0f));
+		robotLegR = glm::scale(robotLegR, glm::vec3(0.2f, 2.0f, 0.2f));
+		DrawCube(gCube, shaderProgramID, robotLegR, glm::vec3(0.5f, 0.5f, 0.8f));
+
 	}
 
 	glutSwapBuffers();
