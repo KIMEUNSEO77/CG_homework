@@ -358,10 +358,10 @@ void SpecialKeyboard(int key, int x, int y)
 {
 	switch (key)
 	{
-	case GLUT_KEY_UP: moveZ -= 0.1f; break;
-	case GLUT_KEY_DOWN: moveZ += 0.1f; break;
-	case GLUT_KEY_LEFT: moveX -= 0.1f; break;
-	case GLUT_KEY_RIGHT: moveX += 0.1f; break;
+	case GLUT_KEY_UP: MoveZ(-moveSpeed); angleY = 180.0f; MoveArmX();  break;
+	case GLUT_KEY_DOWN: MoveZ(moveSpeed); angleY = 0.0f; MoveArmX(); break;
+	case GLUT_KEY_LEFT: MoveX(-moveSpeed); angleY = -90.0f; MoveArmX(); break;
+	case GLUT_KEY_RIGHT: MoveX(moveSpeed);  angleY = 90.0f; MoveArmX(); break;
 	}
 	glutPostRedisplay();
 }
