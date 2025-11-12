@@ -547,9 +547,9 @@ GLvoid drawScene()
 	}
 
 	// --- 미니맵 그리기 시작 ---
-	glViewport(600, 600, 300, 300); // (x, y, width, height) - 윈도우 좌측 하단 기준
-	glm::vec3 miniCamPos = glm::vec3(centerX, 50.0f, centerZ); // 높이 50에서 내려다봄
-	glm::vec3 miniCamTarget = glm::vec3(centerX, 0.0f, centerZ);
+	glViewport(600, 600, 300, 300);
+	glm::vec3 miniCamPos = glm::vec3(centerX - 2.0f, 100.0f, centerZ - 2.0f); // 높이 50에서 내려다봄
+	glm::vec3 miniCamTarget = glm::vec3(centerX - 2.0f, 0.0f, centerZ - 2.0f);
 	glm::vec3 miniCamUp = glm::vec3(0.0f, 0.0f, -1.0f); // z축 아래 방향
 
 	glm::mat4 miniView = glm::lookAt(miniCamPos, miniCamTarget, miniCamUp);
@@ -561,9 +561,9 @@ GLvoid drawScene()
 
 	// 바닥(미니맵용)
 	glm::mat4 groundMini = glm::mat4(1.0f);
-	groundMini = glm::translate(groundMini, glm::vec3(0.0f, -0.5f, 0.0f));
+	groundMini = glm::translate(groundMini, glm::vec3(0.0f, 0.0f, 0.0f));
 	groundMini = glm::scale(groundMini, glm::vec3(100.0f, 0.05f, 100.0f));
-	DrawCube(gCube, shaderProgramID, groundMini, glm::vec3(0.8f, 0.8f, 0.8f)); // 밝은 회색
+	DrawCube(gCube, shaderProgramID, groundMini, glm::vec3(0.8f, 0.8f, 0.8f));
 
 	// 큐브들
 	for (int i = 0; i < cubeCount_x; ++i)
