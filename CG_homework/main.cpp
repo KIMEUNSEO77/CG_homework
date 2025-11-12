@@ -420,6 +420,7 @@ void DrawCube(const Mesh& mesh, GLuint shaderProgram, const glm::mat4& model, co
 
 GLvoid drawScene()
 {
+	glViewport(0, 0, width, height);
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -471,6 +472,98 @@ GLvoid drawScene()
 	//ground = glm::rotate(ground, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
+
+	// 큐브들
+	for (int i = 0; i < cubeCount_x; ++i)
+	{
+		for (int j = 0; j < cubeCount_z; j++)
+		{
+			if (!cubes[i][j].active) continue;  // 길은 그리지 않음
+
+			glm::mat4 model = glm::mat4(1.0f);
+			//model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
+				cubes[i][j].currentY, cubes[i][j].position.z + moveCubeZ));
+			model = glm::scale(model, glm::vec3(1.0f, cubes[i][j].height, 1.0f));
+			DrawCube(gCube, shaderProgramID, model, cubes[i][j].color);
+		}
+	}
+
+	if (playerActive)
+	{
+		// 큐브 그리기
+		// 공통
+		glm::mat4 share = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		share = glm::translate(share, glm::vec3(0.0f, -2.5f, -5.0f));
+
+		// 로봇 그리기
+		glm::mat4 robotBase = share;
+		robotBase = glm::translate(robotBase, glm::vec3(moveX, 5.0f, moveZ));
+		robotBase = glm::rotate(robotBase, glm::radians(angleY), glm::vec3(0.0f, 1.0f, 0.0f));
+		// 머리
+		glm::mat4 robotHead = robotBase;
+		robotHead = glm::translate(robotHead, glm::vec3(0.0f, 0.0f, 0.0f));
+		robotHead = glm::scale(robotHead, glm::vec3(1.0f, 1.0f, 1.0f));
+		DrawCube(gCube, shaderProgramID, robotHead, glm::vec3(1.0f, 0.7f, 0.3f));
+
+		// 코
+		glm::mat4 robotNose = robotBase;
+		robotNose = glm::translate(robotNose, glm::vec3(0.0f, 0.0f, 0.5f));
+		robotNose = glm::scale(robotNose, glm::vec3(0.2f, 0.2f, 0.3f));
+		DrawCube(gCube, shaderProgramID, robotNose, glm::vec3(1.0f, 0.0f, 0.0f));
+
+		// 몸통
+		glm::mat4 robotBody = robotBase;
+		robotBody = glm::translate(robotBody, glm::vec3(0.0f, -1.0f, 0.0f));
+		robotBody = glm::scale(robotBody, glm::vec3(1.0f, 1.5f, 1.0f));
+		DrawCube(gCube, shaderProgramID, robotBody, glm::vec3(0.5f, 0.9f, 0.5f));
+
+		// 왼팔
+		glm::mat4 robotArmL = robotBase;
+		robotArmL = glm::rotate(robotArmL, glm::radians(angleArm_X), glm::vec3(1.0f, 0.0f, 0.0f));
+		robotArmL = glm::translate(robotArmL, glm::vec3(-0.5f, -1.0f, 0.0f));
+		robotArmL = glm::scale(robotArmL, glm::vec3(0.3f, 1.2f, 0.3f));
+		DrawCube(gCube, shaderProgramID, robotArmL, glm::vec3(0.7f, 0.6f, 0.7f));
+		// 오른팔
+		glm::mat4 robotArmR = robotBase;
+		robotArmR = glm::rotate(robotArmR, glm::radians(-angleArm_X), glm::vec3(1.0f, 0.0f, 0.0f));
+		robotArmR = glm::translate(robotArmR, glm::vec3(0.5f, -1.0f, 0.0f));
+		robotArmR = glm::scale(robotArmR, glm::vec3(0.3f, 1.2f, 0.3f));
+		DrawCube(gCube, shaderProgramID, robotArmR, glm::vec3(0.3f, 0.4f, 0.3f));
+
+		// 왼다리
+		glm::mat4 robotLegL = robotBase;
+		robotLegL = glm::rotate(robotLegL, glm::radians(-angleLeg_X), glm::vec3(1.0f, 0.0f, 0.0f));
+		robotLegL = glm::translate(robotLegL, glm::vec3(-0.1f, -2.2f, 0.0f));
+		robotLegL = glm::scale(robotLegL, glm::vec3(0.2f, 2.0f, 0.2f));
+		DrawCube(gCube, shaderProgramID, robotLegL, glm::vec3(0.8f, 0.5f, 0.5f));
+		// 오른다리
+		glm::mat4 robotLegR = robotBase;
+		robotLegR = glm::rotate(robotLegR, glm::radians(angleLeg_X), glm::vec3(1.0f, 0.0f, 0.0f));
+		robotLegR = glm::translate(robotLegR, glm::vec3(0.1f, -2.2f, 0.0f));
+		robotLegR = glm::scale(robotLegR, glm::vec3(0.2f, 2.0f, 0.2f));
+		DrawCube(gCube, shaderProgramID, robotLegR, glm::vec3(0.5f, 0.5f, 0.8f));
+
+	}
+
+	// --- 미니맵 그리기 시작 ---
+	glViewport(600, 600, 300, 300); // (x, y, width, height) - 윈도우 좌측 하단 기준
+	glm::vec3 miniCamPos = glm::vec3(centerX, 50.0f, centerZ); // 높이 50에서 내려다봄
+	glm::vec3 miniCamTarget = glm::vec3(centerX, 0.0f, centerZ);
+	glm::vec3 miniCamUp = glm::vec3(0.0f, 0.0f, -1.0f); // z축 아래 방향
+
+	glm::mat4 miniView = glm::lookAt(miniCamPos, miniCamTarget, miniCamUp);
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &miniView[0][0]);
+
+	glm::mat4 miniProj = glm::ortho((float)-cubeCount_x, (float)cubeCount_x, 
+		(float)-cubeCount_z, (float)cubeCount_z, 1.0f, 100.0f);
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &miniProj[0][0]);
+
+	// 바닥(미니맵용)
+	glm::mat4 groundMini = glm::mat4(1.0f);
+	groundMini = glm::translate(groundMini, glm::vec3(0.0f, -0.5f, 0.0f));
+	groundMini = glm::scale(groundMini, glm::vec3(100.0f, 0.05f, 100.0f));
+	DrawCube(gCube, shaderProgramID, groundMini, glm::vec3(0.8f, 0.8f, 0.8f)); // 밝은 회색
 
 	// 큐브들
 	for (int i = 0; i < cubeCount_x; ++i)
