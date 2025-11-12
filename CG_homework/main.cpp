@@ -468,7 +468,7 @@ GLvoid drawScene()
 	// 바닥
 	glm::mat4 ground = glm::mat4(1.0f);
 	ground = glm::translate(ground, glm::vec3(0.0f, -0.5f, 0.0f));
-	ground = glm::rotate(ground, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	//ground = glm::rotate(ground, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -480,7 +480,7 @@ GLvoid drawScene()
 			if (!cubes[i][j].active) continue;  // 길은 그리지 않음
 
 			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+			//model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
 				cubes[i][j].currentY, cubes[i][j].position.z + moveCubeZ));
 			model = glm::scale(model, glm::vec3(1.0f, cubes[i][j].height, 1.0f));
@@ -493,7 +493,7 @@ GLvoid drawScene()
 		// 큐브 그리기
 		// 공통
 		glm::mat4 share = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		share = glm::translate(share, glm::vec3(0.0f, 0.0f, -5.0f));
+		share = glm::translate(share, glm::vec3(0.0f, -2.5f, -5.0f));
 
 		// 로봇 그리기
 		glm::mat4 robotBase = share;
