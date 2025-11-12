@@ -354,6 +354,8 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'r': mazeMode = true; GenerateMaze(); glutPostRedisplay(); break;
 	case 'v': LowMode(); updownAnimation = !updownAnimation; glutPostRedisplay(); break;
 	case 's': playerActive = true; glutPostRedisplay(); break;
+	case '1': cameraPOV = true; glutPostRedisplay(); break;
+	case '3': cameraPOV = false; glutPostRedisplay(); break;
 	case 'q': exit(0); break;
 	}
 }
@@ -433,18 +435,37 @@ GLvoid drawScene()
 	GLint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLint projLoc = glGetUniformLocation(shaderProgramID, "projection");
 
+	// drawScene() 함수 내 카메라 설정 부분을 수정
+	glm::vec3 cameraPos, cameraDirection, cameraUp;
 	float centerX = (cubeCount_x - 1) / 2.0f;
 	float centerZ = (cubeCount_z - 1) / 2.0f;
 
-	glm::vec3 cameraPos = glm::vec3(centerX, 0.0f, 15.0f + cubeCount_z);
-	glm::vec3 cameraDirection = glm::vec3(centerX, 0.0f, centerZ);
-	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	if (cameraPOV && playerActive) 
+	{
+		// 1인칭 시점: 로봇 머리 위치
+		glm::vec3 robotPos = glm::vec3(moveX, 5.0f, moveZ + 0.3f) + glm::vec3(0.0f, 0.0f, 0.0f); // 필요시 y값 조정
+		cameraPos = robotPos;
 
-	// 카메라 y축 회전
-	glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angleCameraY), glm::vec3(0.0f, 1.0f, 0.0f))
+		// angleY(도)를 라디안으로 변환
+		float rad = glm::radians(angleY);
+
+		// 로봇이 바라보는 방향 벡터 계산 (y축은 고정, z축 기준)
+		glm::vec3 forward = glm::vec3(sin(rad), -0.2f, cos(rad));
+		cameraDirection = cameraPos + forward;
+
+		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	}
+	else 
+	{
+		// 기존 3인칭 시점
+		cameraPos = glm::vec3(centerX, 0.0f, 15.0f + cubeCount_z);
+		cameraDirection = glm::vec3(centerX, 0.0f, centerZ);
+		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angleCameraY), glm::vec3(0.0f, 1.0f, 0.0f))
 			* glm::rotate(glm::mat4(1.0f), glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	
-	cameraPos = glm::vec3(rotation * glm::vec4(cameraPos - cameraDirection, 1.0f)) + cameraDirection;
+		cameraPos = glm::vec3(rotation * glm::vec4(cameraPos - cameraDirection, 1.0f)) + cameraDirection;
+	}
 
 	glm::mat4 vTransform = glm::mat4(1.0f);
 	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
