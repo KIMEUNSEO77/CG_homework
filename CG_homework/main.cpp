@@ -442,15 +442,15 @@ GLvoid drawScene()
 
 	if (cameraPOV && playerActive) 
 	{
-		// 1인칭 시점: 로봇 머리 위치
-		glm::vec3 robotPos = glm::vec3(moveX, 5.0f, moveZ + 0.3f) + glm::vec3(0.0f, 0.0f, 0.0f); // 필요시 y값 조정
-		cameraPos = robotPos;
-
 		// angleY(도)를 라디안으로 변환
 		float rad = glm::radians(angleY);
 
 		// 로봇이 바라보는 방향 벡터 계산 (y축은 고정, z축 기준)
-		glm::vec3 forward = glm::vec3(sin(rad), -0.2f, cos(rad));
+		glm::vec3 forward = glm::vec3(sin(rad), 0.0f, cos(rad));
+
+		// 1인칭 시점: 로봇 머리 위치
+		glm::vec3 robotPos = glm::vec3(moveX, 3.5f, moveZ) - 1.0f * forward; // 시점을 약간 뒤로
+		cameraPos = robotPos;
 		cameraDirection = cameraPos + forward;
 
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
@@ -569,9 +569,9 @@ GLvoid drawScene()
 
 	}
 
-	// --- 미니맵 그리기 시작 ---
+	// 미니맵 그리기 
 	glViewport(600, 600, 300, 300);
-	glm::vec3 miniCamPos = glm::vec3(centerX - 2.0f, 100.0f, centerZ - 2.0f); // 높이 50에서 내려다봄
+	glm::vec3 miniCamPos = glm::vec3(centerX - 2.0f, 100.0f, centerZ - 2.0f); // 높이
 	glm::vec3 miniCamTarget = glm::vec3(centerX - 2.0f, 0.0f, centerZ - 2.0f);
 	glm::vec3 miniCamUp = glm::vec3(0.0f, 0.0f, -1.0f); // z축 아래 방향
 
@@ -593,7 +593,7 @@ GLvoid drawScene()
 	{
 		for (int j = 0; j < cubeCount_z; j++)
 		{
-			if (!cubes[i][j].active) continue;  // 길은 그리지 않음
+			if (!cubes[i][j].active) continue;  
 
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
