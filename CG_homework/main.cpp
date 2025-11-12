@@ -47,6 +47,7 @@ int dir = 1;
 float angleLeg_X = 0.0f;   //  다리 각도
 
 float limitAngleX = 45.0f; float limitAngleY = 10.0f;
+bool cameraPOV = false; // 카메라 시점 모드(true: 로봇 1인칭 시점. false: 기본 3인칭 시점)
 
 struct Cube
 {
@@ -233,6 +234,9 @@ void PrintInstructions()
 	std::cout << "-: 큐브 움직임 속도 감소\n";
 	std::cout << "r: 미로 제작(누를 때마다 새로운 미로가 제작됨)\n";
 	std::cout << "v: 낮은 벽 모드 시작, 움직임 시작/정지\n";
+	std::cout << "s: 플레이어(로봇) 등장\n";
+	std::cout << "1: 로봇 1인칭 시점 카메라 모드\n";
+	std::cout << "3: 기본 3인칭 시점 카메라 모드\n";
 	std::cout << "q: 종료\n";
 }
 
@@ -469,7 +473,6 @@ GLvoid drawScene()
 	// 바닥
 	glm::mat4 ground = glm::mat4(1.0f);
 	ground = glm::translate(ground, glm::vec3(0.0f, -0.5f, 0.0f));
-	//ground = glm::rotate(ground, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 	ground = glm::scale(ground, glm::vec3(100.0f, 0.05f, 100.0f));
 	DrawCube(gCube, shaderProgramID, ground, glm::vec3(0.0f, 0.0f, 0.0f));
 
@@ -481,7 +484,6 @@ GLvoid drawScene()
 			if (!cubes[i][j].active) continue;  // 길은 그리지 않음
 
 			glm::mat4 model = glm::mat4(1.0f);
-			//model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
 				cubes[i][j].currentY, cubes[i][j].position.z + moveCubeZ));
 			model = glm::scale(model, glm::vec3(1.0f, cubes[i][j].height, 1.0f));
@@ -573,7 +575,6 @@ GLvoid drawScene()
 			if (!cubes[i][j].active) continue;  // 길은 그리지 않음
 
 			glm::mat4 model = glm::mat4(1.0f);
-			//model = glm::rotate(model, glm::radians(15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			model = glm::translate(model, glm::vec3(cubes[i][j].position.x,
 				cubes[i][j].currentY, cubes[i][j].position.z + moveCubeZ));
 			model = glm::scale(model, glm::vec3(1.0f, cubes[i][j].height, 1.0f));
