@@ -40,7 +40,7 @@ bool lowMode = false;    // 낮은 벽 모드(낮아지고, 움직임이 멈춰야 함)
 bool playerActive = false; // 플레이어 있는지 없는지
 
 // 로봇
-float moveX = 0.0f; float moveZ = 0.0f; float moveSpeed = 0.05f;
+float moveX = 0.0f; float moveZ = 0.0f; float moveSpeed = 0.1f;
 float angleY = 0.0f;  // 움직일 때 방향 (로봇 전체 방향)
 float angleArm_X = 0.0f;   //  팔 각도
 int dir = 1;
@@ -449,7 +449,7 @@ GLvoid drawScene()
 		constexpr float pitch = glm::radians(-15.0f);
 
 		// 로봇 위치
-		glm::vec3 robotPos = glm::vec3(moveX * 0.5f, 2.0f, moveZ * 0.5f - 5.0f);
+		glm::vec3 robotPos = glm::vec3(moveX * 0.5f, 2.0f + cubeCount_z * 0.03f, moveZ * 0.5f - 5.0f);
 
 		// 로봇이 바라보는 방향 벡터
 		glm::vec3 forward = glm::vec3(
@@ -531,7 +531,7 @@ GLvoid drawScene()
 		// 큐브 그리기
 		// 공통
 		glm::mat4 share = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		share = glm::translate(share, glm::vec3(0.0f, -1.5f + cubeCount_z * 0.05f, -5.0f));
+		share = glm::translate(share, glm::vec3(0.0f, -1.5f + cubeCount_z * 0.04f, -5.0f));
 		share = glm::scale(share, glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// 로봇 그리기
