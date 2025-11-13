@@ -213,6 +213,7 @@ void LowMode()
 		for (int j = 0; j < cubeCount_z; ++j)
 		{
 			if (!cubes[i][j].active) continue;  // 애니메이션 x
+			cubes[i][j].currentY = -0.5f;
 			cubes[i][j].height = 5.0f;
 		}
 	}
@@ -250,6 +251,7 @@ void MoveArmX()
 	else if (angleLeg_X < -limitAngleY) dir = 1;
 	angleLeg_X += dir * 1.0f;
 }
+
 
 void MoveX(float speed)
 {
@@ -352,7 +354,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 'y': rotatingYPlus = !rotatingYPlus; rotatingYMinus = false; break;
 	case 'Y': rotatingYMinus = !rotatingYMinus; rotatingYPlus = false; break;
 	case 'r': mazeMode = true; GenerateMaze(); glutPostRedisplay(); break;
-	case 'v': LowMode(); updownAnimation = !updownAnimation; glutPostRedisplay(); break;
+	case 'v': updownAnimation = !updownAnimation; LowMode(); glutPostRedisplay(); break;
 	case 's': playerActive = true; glutPostRedisplay(); break;
 	case '1': cameraPOV = true; glutPostRedisplay(); break;
 	case '3': cameraPOV = false; glutPostRedisplay(); break;
@@ -444,16 +446,26 @@ GLvoid drawScene()
 	{
 		// angleY(도)를 라디안으로 변환
 		float rad = glm::radians(angleY);
+		constexpr float pitch = glm::radians(-25.0f);
 
 		// 로봇이 바라보는 방향 벡터 계산 (y축은 고정, z축 기준)
-		glm::vec3 forward = glm::vec3(sin(rad), 0.0f, cos(rad));
+		glm::vec3 forward = glm::vec3(
+			sin(rad) * cos(pitch), // x
+			sin(pitch),            // y
+			cos(rad) * cos(pitch)  // z
+		);
 
 		// 1인칭 시점: 로봇 머리 위치
-		glm::vec3 robotPos = glm::vec3(moveX, 3.5f, moveZ) - 1.0f * forward; // 시점을 약간 뒤로
+		glm::vec3 robotPos = glm::vec3(moveX, 3.5f, moveZ); // 시점을 약간 뒤로
 		cameraPos = robotPos;
-		cameraDirection = cameraPos + forward;
+		cameraDirection = robotPos + forward;
 
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		glm::mat4 vTransform = glm::mat4(1.0f);
+		vTransform = glm::lookAt(cameraPos, forward, cameraUp);
+		// vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
 	}
 	else 
 	{
@@ -465,11 +477,11 @@ GLvoid drawScene()
 		glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), glm::radians(angleCameraY), glm::vec3(0.0f, 1.0f, 0.0f))
 			* glm::rotate(glm::mat4(1.0f), glm::radians(-15.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 		cameraPos = glm::vec3(rotation * glm::vec4(cameraPos - cameraDirection, 1.0f)) + cameraDirection;
-	}
 
-	glm::mat4 vTransform = glm::mat4(1.0f);
-	vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
+		glm::mat4 vTransform = glm::mat4(1.0f);
+		vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
+	}
 
 	glm::mat4 pTransform = glm::mat4(1.0f);
 	if (orthoMode)
