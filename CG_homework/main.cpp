@@ -446,7 +446,7 @@ GLvoid drawScene()
 	{
 		// angleY(도)를 라디안으로 변환
 		float rad = glm::radians(angleY);
-		constexpr float pitch = glm::radians(-25.0f);
+		constexpr float pitch = glm::radians(-5.0f);
 
 		// 로봇이 바라보는 방향 벡터 계산 (y축은 고정, z축 기준)
 		glm::vec3 forward = glm::vec3(
@@ -456,15 +456,15 @@ GLvoid drawScene()
 		);
 
 		// 1인칭 시점: 로봇 머리 위치
-		glm::vec3 robotPos = glm::vec3(moveX, 3.5f, moveZ); // 시점을 약간 뒤로
+		glm::vec3 robotPos = glm::vec3(moveX, 1.5f, moveZ); // 시점을 약간 뒤로
 		cameraPos = robotPos;
 		cameraDirection = robotPos + forward;
 
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 		glm::mat4 vTransform = glm::mat4(1.0f);
-		vTransform = glm::lookAt(cameraPos, forward, cameraUp);
-		// vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
+		//vTransform = glm::lookAt(cameraPos, forward, cameraUp);
+		vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
 	}
 	else 
@@ -529,7 +529,8 @@ GLvoid drawScene()
 		// 큐브 그리기
 		// 공통
 		glm::mat4 share = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		share = glm::translate(share, glm::vec3(0.0f, -2.5f, -5.0f));
+		share = glm::translate(share, glm::vec3(0.0f, 0.5f, -5.0f));
+		share = glm::scale(share, glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// 로봇 그리기
 		glm::mat4 robotBase = share;
@@ -620,7 +621,8 @@ GLvoid drawScene()
 		// 큐브 그리기
 		// 공통
 		glm::mat4 share = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		share = glm::translate(share, glm::vec3(0.0f, -2.5f, -5.0f));
+		share = glm::translate(share, glm::vec3(0.0f, 0.5f, -5.0f));
+		share = glm::scale(share, glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// 로봇 그리기
 		glm::mat4 robotBase = share;
