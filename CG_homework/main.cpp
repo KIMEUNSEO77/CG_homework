@@ -444,12 +444,12 @@ GLvoid drawScene()
 
 	if (cameraPOV && playerActive)
 	{
-		float cameraDistance = 2.0f;
+		float cameraDistance = 1.0f;
 		float rad = glm::radians(angleY);
-		constexpr float pitch = glm::radians(-5.0f);
+		constexpr float pitch = glm::radians(-15.0f);
 
 		// 로봇 위치
-		glm::vec3 robotPos = glm::vec3(moveX * 0.5f, 1.5f, moveZ * 0.5f - 5.0f);
+		glm::vec3 robotPos = glm::vec3(moveX * 0.5f, 2.0f, moveZ * 0.5f - 5.0f);
 
 		// 로봇이 바라보는 방향 벡터
 		glm::vec3 forward = glm::vec3(
