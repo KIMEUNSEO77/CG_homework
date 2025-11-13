@@ -16,6 +16,8 @@
 #include <stack>
 #include <utility>
 
+#include <cmath>
+
 void make_vertexShaders();
 void make_fragmentShaders();
 GLuint make_shaderProgram();
@@ -252,17 +254,63 @@ void MoveArmX()
 	angleLeg_X += dir * 1.0f;
 }
 
-
-void MoveX(float speed)
+// 플레이어 위치가 큐브와 충돌하는지 확인하는 함수
+bool IsCollidingWithCube(float nextX, float nextZ)
 {
-	moveX += speed;
-	glutPostRedisplay();
+	// moveX/moveZ -> 실제 월드 좌표로 변환
+	float playerX = nextX * 0.5f;
+	float playerZ = nextZ * 0.5f - 5.0f;
+
+	// 플레이어 반지름, 큐브 반지름
+	float playerHalf = 0.25f;
+	float cubeHalf = 0.5f;
+
+	for (int i = 0; i < cubeCount_x; ++i)
+	{
+		for (int j = 0; j < cubeCount_z; ++j)
+		{
+			if (!cubes[i][j].active) continue;  // 길은 무시
+
+			// 큐브의 실제 월드 좌표
+			float cubeX = cubes[i][j].position.x;
+			float cubeZ = cubes[i][j].position.z + moveCubeZ;   // ★ 중요
+
+			// AABB 충돌 체크
+			float dx = std::fabs(playerX - cubeX);
+			float dz = std::fabs(playerZ - cubeZ);
+
+			if (dx < playerHalf + cubeHalf &&
+				dz < playerHalf + cubeHalf)
+			{
+				// 충돌
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
+
+// X축 이동 함수
+void MoveX(float speed)
+{
+	float nextX = moveX + speed;
+	if (!IsCollidingWithCube(nextX, moveZ))
+	{
+		moveX = nextX;
+		glutPostRedisplay();
+	}
+}
+
+// Z축 이동 함수
 void MoveZ(float speed)
 {
-	moveZ += speed;
-	glutPostRedisplay();
+	float nextZ = moveZ + speed;
+	if (!IsCollidingWithCube(moveX, nextZ))
+	{
+		moveZ = nextZ;
+		glutPostRedisplay();
+	}
 }
 
 void IncreaseSpeed(float delta)
