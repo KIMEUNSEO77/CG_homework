@@ -592,8 +592,8 @@ GLvoid drawScene()
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &miniView[0][0]);
 
 	glm::mat4 miniProj = glm::ortho(
-		-cubeCount_x / 2.0f, cubeCount_x / 2.0f,
-		-cubeCount_z / 2.0f, cubeCount_z / 2.0f,
+		-cubeCount_x / 2.0f - 3.0f, cubeCount_x / 2.0f + 3.0f,
+		-cubeCount_z / 2.0f - 3.0f, cubeCount_z / 2.0f + 3.0f,
 		1.0f, 100.0f
 	);
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &miniProj[0][0]);
