@@ -88,15 +88,15 @@ void GenerateMaze()
 		return (x > 0 && x < cubeCount_x - 1 && z > 0 && z < cubeCount_z - 1);
 		};
 
-	// 시작 셀(홀수,홀수) 선택
-	int sx = 1, sz = 1;  // 고정해도 되고 랜덤해도 됨
+	// 시작 부분
+	int sx = 1, sz = 1;
 	vis[sx][sz] = true;
 	cubes[sx][sz].active = false; // 길
 
 	std::stack<std::pair<int, int>> st;
 	st.push({ sx, sz });
 
-	// 이웃 방향(2칸씩 이동): 좌우상하
+	// 이웃 방향 2칸씩 이동
 	const int dx[4] = { +2, -2, 0, 0 };
 	const int dz[4] = { 0, 0, +2, -2 };
 
@@ -106,7 +106,7 @@ void GenerateMaze()
 		int x = cur.first;
 		int z = cur.second;
 
-		// 방문하지 않은 이웃(2칸 떨어진 홀수칸) 수집
+		// 방문하지 않은 이웃
 		std::vector<int> cand;
 		for (int k = 0; k < 4; ++k)
 		{
@@ -139,8 +139,7 @@ void GenerateMaze()
 		st.push({ nx, nz });
 	}
 
-	// 입구/출구(테두리 구멍) 만들어 주기(원하면)
-	cubes[1][0].active = false;                           // 입구
+	cubes[1][0].active = false;                               // 입구
 	cubes[cubeCount_x - 2][cubeCount_z - 1].active = false;   // 출구
 }
 
@@ -169,7 +168,7 @@ void InitCube()
 				randomFloat(0.1f, 1.0f), randomFloat(0.1f, 1.0f));
 			cubes[i][j].height = randomFloat(9.0f, 17.0f);
 			cubes[i][j].currentY = -10.0f;
-			cubes[i][j].goingUp = rand() % 2;           // 방향 랜덤
+			cubes[i][j].goingUp = rand() % 2;                    // 방향 랜덤
 			cubes[i][j].moveingSpeed = randomFloat(0.01f, 0.3f); // 속도 랜덤
 		}
 	}
@@ -193,7 +192,7 @@ void InputCubeCount()
 		std::cerr << "세로 개수 잘못 입력" << std::endl;
 		InputCubeCount();
 	}
-	InitCube();
+	InitCube();   // 큐브들 정보 초기화
 }
 
 void SpeedChange(float delta)
@@ -243,6 +242,7 @@ void PrintInstructions()
 	std::cout << "s: 플레이어(로봇) 등장\n";
 	std::cout << "1: 로봇 1인칭 시점 카메라 모드\n";
 	std::cout << "3: 기본 3인칭 시점 카메라 모드\n";
+	std::cout << "c: 모든 값 초기화\n";
 	std::cout << "q: 종료\n";
 }
 
@@ -260,7 +260,7 @@ void MoveArmX()
 // 플레이어 위치가 큐브와 충돌하는지 확인하는 함수
 bool IsCollidingWithCube(float nextX, float nextZ)
 {
-	// moveX/moveZ -> 실제 월드 좌표로 변환
+	// moveX,moveZ를 실제 월드 좌표로 변환
 	float playerX = nextX * 0.5f;
 	float playerZ = nextZ * 0.5f - 5.0f;
 
@@ -276,7 +276,7 @@ bool IsCollidingWithCube(float nextX, float nextZ)
 
 			// 큐브의 실제 월드 좌표
 			float cubeX = cubes[i][j].position.x;
-			float cubeZ = cubes[i][j].position.z + moveCubeZ;   // ★ 중요
+			float cubeZ = cubes[i][j].position.z + moveCubeZ; 
 
 			// AABB 충돌 체크
 			float dx = std::fabs(playerX - cubeX);
@@ -387,7 +387,31 @@ void Timer(int value)
 	if (rotatingYMinus) angleCameraY -= 0.2f;
 
 	glutPostRedisplay();
-	glutTimerFunc(16, Timer, 0); // 약 60 FPS
+	glutTimerFunc(16, Timer, 0);
+}
+
+// 리셋
+void ResetAll()
+{
+	cubes.clear();
+	animationActive = true;
+	orthoMode = false;
+	moveCubeZ = 0.0f;
+	updownAnimation = false;
+	rotatingYPlus = false;
+	rotatingYMinus = false;
+	angleCameraY = 0.0f;
+	mazeMode = false;
+	lowMode = false;
+	playerActive = false;
+	moveX = 0.0f; moveZ = 0.0f; moveSpeed = 0.1f;
+	angleY = 0.0f;
+	angleArm_X = 0.0f;
+	angleLeg_X = 0.0f;
+	limitAngleX = 45.0f; limitAngleY = 10.0f;
+	if (cubeCount_x > 0 && cubeCount_z > 0)
+		InitCube();
+	glutPostRedisplay();
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y)
@@ -409,6 +433,7 @@ GLvoid Keyboard(unsigned char key, int x, int y)
 	case 's': playerActive = true; glutPostRedisplay(); break;
 	case '1': cameraPOV = true; glutPostRedisplay(); break;
 	case '3': cameraPOV = false; glutPostRedisplay(); break;
+	case 'c': ResetAll(); break;
 	case 'q': exit(0); break;
 	}
 }
@@ -488,15 +513,18 @@ GLvoid drawScene()
 	GLint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLint projLoc = glGetUniformLocation(shaderProgramID, "projection");
 
-	// 조명 켜기/끄기 설정
+	// 조명 켜기 설정
 	GLuint lightOnLoc = glGetUniformLocation(shaderProgramID, "lightOn");
 	glUniform1i(lightOnLoc, lightMode ? 1 : 0);
 
-	// 조명/객체 색 설정
+	// 조명, 객체 색 설정
 	GLint lightLoc = glGetUniformLocation(shaderProgramID, "lightColor");
 	GLint objLoc = glGetUniformLocation(shaderProgramID, "objectColor");
 
-	glm::vec3 lightPos = glm::vec3(1.0f, 3.0f, 2.5f);
+	// 조명 위치
+	glm::vec3 lightPos;
+	if (playerActive) lightPos = glm::vec3(moveX * 0.5f, 2.0f + cubeCount_z * 0.03f, moveZ * 0.5f - 5.0f);
+	else  lightPos = glm::vec3(1.0f, 3.0f, 2.5f);
 
 	GLint uLightPos = glGetUniformLocation(shaderProgramID, "lightPos");  // 조명 위치
 	GLuint viewPosLoc = glGetUniformLocation(shaderProgramID, "viewPos");    // 카메라 위치
@@ -504,7 +532,6 @@ GLvoid drawScene()
 	glUniform3f(objLoc, 1.0f, 0.7f, 0.7f);      // 오브젝트 색
 	glUniform3f(uLightPos, lightPos.x, lightPos.y, lightPos.z); // 조명 위치
 
-	// drawScene() 함수 내 카메라 설정 부분을 수정
 	glm::vec3 cameraPos, cameraDirection, cameraUp;
 	float centerX = (cubeCount_x - 1) / 2.0f;
 	float centerZ = (cubeCount_z - 1) / 2.0f;
@@ -525,13 +552,10 @@ GLvoid drawScene()
 			cos(rad) * cos(pitch)
 		);
 
-		// 카메라 위치 = 로봇 위치 - forward * cameraDistance
+		// 카메라 위치
 		cameraPos = robotPos - forward * cameraDistance;
 		cameraDirection = robotPos;
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
-
-		// 약간 위에서 내려다보는 효과(원하면)
-		//cameraPos.y += 2.0f;
 
 		glm::mat4 vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
