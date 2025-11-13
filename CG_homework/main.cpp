@@ -591,8 +591,11 @@ GLvoid drawScene()
 	glm::mat4 miniView = glm::lookAt(miniCamPos, miniCamTarget, miniCamUp);
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &miniView[0][0]);
 
-	glm::mat4 miniProj = glm::ortho((float)-cubeCount_x, (float)cubeCount_x, 
-		(float)-cubeCount_z, (float)cubeCount_z, 1.0f, 100.0f);
+	glm::mat4 miniProj = glm::ortho(
+		-cubeCount_x / 2.0f, cubeCount_x / 2.0f,
+		-cubeCount_z / 2.0f, cubeCount_z / 2.0f,
+		1.0f, 100.0f
+	);
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &miniProj[0][0]);
 
 	// ¹Ù´Ú(¹Ì´Ï¸Ê¿ë)
