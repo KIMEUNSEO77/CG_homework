@@ -529,7 +529,7 @@ GLvoid drawScene()
 		// 큐브 그리기
 		// 공통
 		glm::mat4 share = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-		share = glm::translate(share, glm::vec3(0.0f, 0.5f, -5.0f));
+		share = glm::translate(share, glm::vec3(0.0f, -1.5f + cubeCount_z * 0.05f, -5.0f));
 		share = glm::scale(share, glm::vec3(0.5f, 0.5f, 0.5f));
 
 		// 로봇 그리기
