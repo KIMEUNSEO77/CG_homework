@@ -51,6 +51,9 @@ float angleLeg_X = 0.0f;   //  다리 각도
 float limitAngleX = 45.0f; float limitAngleY = 10.0f;
 bool cameraPOV = false; // 카메라 시점 모드(true: 로봇 1인칭 시점. false: 기본 3인칭 시점)
 
+// 조명
+bool lightMode = true;
+
 struct Cube
 {
 	glm::vec3 position;
@@ -466,7 +469,7 @@ void DrawCube(const Mesh& mesh, GLuint shaderProgram, const glm::mat4& model, co
 	GLint modelLoc = glGetUniformLocation(shaderProgram, "model");
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, &model[0][0]);
 
-	GLint colorLoc = glGetUniformLocation(shaderProgram, "vColor");
+	GLint colorLoc = glGetUniformLocation(shaderProgram, "objectColor");
 	glUniform3fv(colorLoc, 1, &color[0]);
 
 	glBindVertexArray(mesh.vao);
@@ -484,6 +487,22 @@ GLvoid drawScene()
 
 	GLint viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	GLint projLoc = glGetUniformLocation(shaderProgramID, "projection");
+
+	// 조명 켜기/끄기 설정
+	GLuint lightOnLoc = glGetUniformLocation(shaderProgramID, "lightOn");
+	glUniform1i(lightOnLoc, lightMode ? 1 : 0);
+
+	// 조명/객체 색 설정
+	GLint lightLoc = glGetUniformLocation(shaderProgramID, "lightColor");
+	GLint objLoc = glGetUniformLocation(shaderProgramID, "objectColor");
+
+	glm::vec3 lightPos = glm::vec3(1.0f, 3.0f, 2.5f);
+
+	GLint uLightPos = glGetUniformLocation(shaderProgramID, "lightPos");  // 조명 위치
+	GLuint viewPosLoc = glGetUniformLocation(shaderProgramID, "viewPos");    // 카메라 위치
+	glUniform3f(lightLoc, 1.0f, 1.0f, 1.0f);
+	glUniform3f(objLoc, 1.0f, 0.7f, 0.7f);      // 오브젝트 색
+	glUniform3f(uLightPos, lightPos.x, lightPos.y, lightPos.z); // 조명 위치
 
 	// drawScene() 함수 내 카메라 설정 부분을 수정
 	glm::vec3 cameraPos, cameraDirection, cameraUp;
