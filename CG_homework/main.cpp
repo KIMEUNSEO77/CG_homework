@@ -240,6 +240,7 @@ void PrintInstructions()
 	std::cout << "r: 미로 제작(누를 때마다 새로운 미로가 제작됨)\n";
 	std::cout << "v: 낮은 벽 모드 시작, 움직임 시작/정지\n";
 	std::cout << "s: 플레이어(로봇) 등장\n";
+	std::cout << "방향키: 플레이어 이동\n";
 	std::cout << "1: 로봇 1인칭 시점 카메라 모드\n";
 	std::cout << "3: 기본 3인칭 시점 카메라 모드\n";
 	std::cout << "c: 모든 값 초기화\n";
@@ -442,10 +443,10 @@ void SpecialKeyboard(int key, int x, int y)
 {
 	switch (key)
 	{
-	case GLUT_KEY_UP: MoveZ(-moveSpeed); angleY = 180.0f; MoveArmX();  break;
-	case GLUT_KEY_DOWN: MoveZ(moveSpeed); angleY = 0.0f; MoveArmX(); break;
-	case GLUT_KEY_LEFT: MoveX(-moveSpeed); angleY = -90.0f; MoveArmX(); break;
-	case GLUT_KEY_RIGHT: MoveX(moveSpeed);  angleY = 90.0f; MoveArmX(); break;
+	case GLUT_KEY_UP: if (playerActive) { MoveZ(-moveSpeed); angleY = 180.0f; MoveArmX(); }  break;
+	case GLUT_KEY_DOWN: if (playerActive) { MoveZ(moveSpeed); angleY = 0.0f; MoveArmX(); }break;
+	case GLUT_KEY_LEFT: if (playerActive) { MoveX(-moveSpeed); angleY = -90.0f; MoveArmX(); } break;
+	case GLUT_KEY_RIGHT: if (playerActive) { MoveX(moveSpeed);  angleY = 90.0f; MoveArmX(); } break;
 	}
 	glutPostRedisplay();
 }
