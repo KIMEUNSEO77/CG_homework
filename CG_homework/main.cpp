@@ -442,29 +442,27 @@ GLvoid drawScene()
 	float centerX = (cubeCount_x - 1) / 2.0f;
 	float centerZ = (cubeCount_z - 1) / 2.0f;
 
-	if (cameraPOV && playerActive) 
+	if (cameraPOV && playerActive)
 	{
-		// angleY(도)를 라디안으로 변환
+		float cameraDistance = 10.0f; // 로봇과 카메라 사이 거리 (원하는 값으로 조절)
 		float rad = glm::radians(angleY);
 		constexpr float pitch = glm::radians(-5.0f);
 
-		// 로봇이 바라보는 방향 벡터 계산 (y축은 고정, z축 기준)
-		glm::vec3 forward = glm::vec3(
-			sin(rad) * cos(pitch), // x
-			sin(pitch),            // y
-			cos(rad) * cos(pitch)  // z
-		);
+		// 로봇 위치
+		glm::vec3 robotPos = glm::vec3(moveX * 0.5f, 1.5f, moveZ * 0.5f);
 
-		// 1인칭 시점: 로봇 머리 위치
-		glm::vec3 robotPos = glm::vec3(moveX, 1.5f, moveZ); // 시점을 약간 뒤로
-		cameraPos = robotPos;
-		cameraDirection = robotPos + forward;
+		// 뒤쪽 방향 벡터 (로봇이 바라보는 방향의 반대)
+		glm::vec3 backDir = glm::vec3(-sin(rad) * cos(pitch), 0.0f, -cos(rad) * cos(pitch));
 
+		// 카메라 위치 = 로봇 위치 + 뒤쪽 방향 * 거리
+		cameraPos = robotPos + backDir * cameraDistance;
+		cameraDirection = robotPos; // 로봇을 바라봄
 		cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-		glm::mat4 vTransform = glm::mat4(1.0f);
-		//vTransform = glm::lookAt(cameraPos, forward, cameraUp);
-		vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
+		// 약간 위에서 내려다보는 효과(원하면)
+		cameraPos.y += 2.0f;
+
+		glm::mat4 vTransform = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vTransform[0][0]);
 	}
 	else 
